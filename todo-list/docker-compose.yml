@@ -4,8 +4,6 @@ services:
   frontend:
     build: ./frontend
     container_name: todo-frontend
-    deploy:
-      replicas: 3
     ports:
       - "8080:8080"
     depends_on:
