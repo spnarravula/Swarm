@@ -12,4 +12,4 @@ title TEXT NOT NULL
 
 RUN All
 
-docker-compose up --build
+docker-compose up --build -d
