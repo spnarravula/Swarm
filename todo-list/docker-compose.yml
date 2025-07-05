@@ -23,7 +23,7 @@ services:
       placement:
         constraints: [node.role == worker]
       restart_policy:
-        condition: on_failure
+        condition: on-failure
     environment:
       - DB_HOST=db
       - DB_PORT=5432
