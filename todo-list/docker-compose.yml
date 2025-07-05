@@ -2,19 +2,24 @@ version: '3.8'
 
 services:
   frontend:
-    build: ./frontend
+    image:  todo-frontend:latest
     ports:
       - "8080:8080"
     deploy:
-      replicas: 3 
+      replicas: 3
+      restart_policy:
+        condition: on-failure 
     depends_on:
       - backend
 
   backend:
-    build: ./backend
-    container_name: todo-backend
+    image:  todo-backend:latest
     ports:
       - "3000:3000"
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on_failure
     environment:
       - DB_HOST=db
       - DB_PORT=5432
