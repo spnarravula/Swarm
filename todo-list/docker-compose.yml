@@ -28,19 +28,23 @@ services:
       - DB_HOST=db
       - DB_PORT=5432
       - DB_USER=postgres
+      # For production, use Docker Secrets instead of plaintext passwords
       - DB_PASSWORD=examplepassword
       - DB_NAME=tododb
     networks:
       - todo-net
+    # This ensures the backend only starts after the database is healthy
+    depends_on:
+      db:
+        condition: service_healthy
 
   db:
     image: postgres:16-alpine
-    container_name: todo-postgres
     environment:
       POSTGRES_USER: postgres
+      # For production, use Docker Secrets
       POSTGRES_PASSWORD: examplepassword
       POSTGRES_DB: tododb
-      POSTGRES_HOST_AUTH_METHOD: trust
     volumes:
       - db-data:/var/lib/postgresql/data
     deploy:
@@ -51,11 +55,20 @@ services:
         constraints: [node.role == manager]
     networks:
       - todo-net
-    command: postgres -c listen_addresses='*'
+    # Healthcheck ensures the container is ready to accept connections
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d tododb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   db-data:
+    # It's good practice to define the volume driver
+    driver: local
 
 networks:
   todo-net:
     driver: overlay
+    # This makes the network attachable for potential ad-hoc containers
+    attachable: true
