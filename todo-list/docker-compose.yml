@@ -33,8 +33,7 @@ services:
     networks:
       - todo-net
     depends_on:
-      db:
-        condition: service_healthy  # Enforces order in non-Swarm; in Swarm, use healthcheck or wait script
+      - db
     secrets:
       - db_password
     healthcheck:  # Suggested: Check backend readiness and DB connection
