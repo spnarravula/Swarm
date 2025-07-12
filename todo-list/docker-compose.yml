@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   frontend:
-    image:  ravikc/todo-frontend:latest
+    image: ravikc/todo-frontend:latest
     ports:
       - "8080:8080"
     deploy:
@@ -10,12 +10,12 @@ services:
       placement:
         constraints: [node.role == worker]
       restart_policy:
-        condition: on-failure 
-    depends_on:
-      - backend
+        condition: on-failure
+    networks:
+      - todo-net
 
   backend:
-    image:  ravikc/todo-backend:latest
+    image: ravikc/todo-backend:latest
     ports:
       - "3000:3000"
     deploy:
@@ -30,8 +30,8 @@ services:
       - DB_USER=postgres
       - DB_PASSWORD=examplepassword
       - DB_NAME=tododb
-    depends_on:
-      - db
+    networks:
+      - todo-net
 
   db:
     image: postgres:16-alpine
@@ -50,5 +50,12 @@ services:
         condition: on-failure
       placement:
         constraints: [node.role == manager]
+    networks:
+      - todo-net
+
 volumes:
   db-data:
+
+networks:
+  todo-net:
+    driver: overlay
