@@ -28,22 +28,26 @@ services:
       - DB_HOST=db
       - DB_PORT=5432
       - DB_USER=postgres
-      # For production, use Docker Secrets instead of plaintext passwords
-      - DB_PASSWORD=examplepassword
+      - DB_PASSWORD_FILE=/run/secrets/db_password
       - DB_NAME=tododb
     networks:
       - todo-net
-    # This ensures the backend only starts after the database is healthy
     depends_on:
-      - db
-     
+      db:
+        condition: service_healthy  # Enforces order in non-Swarm; in Swarm, use healthcheck or wait script
+    secrets:
+      - db_password
+    healthcheck:  # Suggested: Check backend readiness and DB connection
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/health || exit 1"]  # Adjust to your backend's health endpoint
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   db:
     image: postgres:16-alpine
     environment:
       POSTGRES_USER: postgres
-      # For production, use Docker Secrets
-      POSTGRES_PASSWORD: examplepassword
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
       POSTGRES_DB: tododb
     volumes:
       - db-data:/var/lib/postgresql/data
@@ -55,20 +59,23 @@ services:
         constraints: [node.role == manager]
     networks:
       - todo-net
-    # Healthcheck ensures the container is ready to accept connections
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d tododb"]
       interval: 10s
       timeout: 5s
       retries: 5
+    secrets:
+      - db_password
 
 volumes:
   db-data:
-    # It's good practice to define the volume driver
-    driver: local
+    driver: local  # Consider a distributed driver for production multi-node
 
 networks:
   todo-net:
     driver: overlay
-    # This makes the network attachable for potential ad-hoc containers
     attachable: true
+
+secrets:
+  db_password:
+    external: true  # Create this secret externally in Swarm
