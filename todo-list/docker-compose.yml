@@ -33,8 +33,7 @@ services:
     networks:
       - todo-net
     depends_on:
-      db:
-        condition: service_healthy  # Enforces order in non-Swarm; in Swarm, use healthcheck or wait script
+      - db
     healthcheck:  # Suggested: Check backend readiness and DB connection (adjust to your backend's health endpoint if available)
       test: ["CMD-SHELL", "curl -f http://localhost:3000/health || exit 1"]
       interval: 10s
