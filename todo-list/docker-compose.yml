@@ -28,16 +28,15 @@ services:
       - DB_HOST=db
       - DB_PORT=5432
       - DB_USER=postgres
-      - DB_PASSWORD_FILE=/run/secrets/db_password
+      - DB_PASSWORD=examplepassword  # Inline password (use a secure one in production)
       - DB_NAME=tododb
     networks:
       - todo-net
     depends_on:
-      - db
-    secrets:
-      - db_password
-    healthcheck:  # Suggested: Check backend readiness and DB connection
-      test: ["CMD-SHELL", "curl -f http://localhost:3000/health || exit 1"]  # Adjust to your backend's health endpoint
+      db:
+        condition: service_healthy  # Enforces order in non-Swarm; in Swarm, use healthcheck or wait script
+    healthcheck:  # Suggested: Check backend readiness and DB connection (adjust to your backend's health endpoint if available)
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/health || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -46,7 +45,7 @@ services:
     image: postgres:16-alpine
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+      POSTGRES_PASSWORD: examplepassword  # Inline password (use a secure one in production)
       POSTGRES_DB: tododb
     volumes:
       - db-data:/var/lib/postgresql/data
@@ -63,8 +62,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    secrets:
-      - db_password
 
 volumes:
   db-data:
@@ -74,7 +71,3 @@ networks:
   todo-net:
     driver: overlay
     attachable: true
-
-secrets:
-  db_password:
-    external: true  # Create this secret externally in Swarm
